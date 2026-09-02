@@ -1,17 +1,20 @@
-﻿using Application.Services;
+﻿using Application.Interfaces;
+using Application.Services;
 using Domain.Entities;
 using System.Collections.ObjectModel;
 using Xunit;
 
-namespace UnitTests;
+namespace Tests.MatchingEngineTest;
 
-public class UnitTest
+public abstract class MatchingEngineTestBase
 {
+    protected abstract IMatchingEngine CreateEngine();
+
     [Fact]
     public void T01AcomodacaoNoBook()
     {
         // Arrange
-        MatchingEngine matchingEngine = new MatchingEngine();
+        IMatchingEngine matchingEngine = CreateEngine();
 
         // Act
         Order order = Order.BuyOrder(100, 20);
@@ -25,7 +28,7 @@ public class UnitTest
     public void T02OMatchPerfeito()
     {
         // Arrange
-        MatchingEngine matchingEngine = new MatchingEngine();
+        IMatchingEngine matchingEngine = CreateEngine();
         Order sellOrder = Order.SellOrder(100, 20);
         matchingEngine.ProcessOrder(sellOrder);
 
@@ -43,7 +46,7 @@ public class UnitTest
     public void T03ExecucaoParcial()
     {
         // Arrange
-        MatchingEngine matchingEngine = new MatchingEngine();
+        IMatchingEngine matchingEngine = CreateEngine();
         Order sellOrder = Order.SellOrder(100, 20);
         matchingEngine.ProcessOrder(sellOrder);
 
@@ -56,7 +59,7 @@ public class UnitTest
         Assert.Equal(100, trade.Quantity);
         Assert.Equal(20, trades[0].Price);
 
-        var unmatchedOrder = Assert.Single(matchingEngine.Book);
+        var unmatchedOrder = Assert.Single(matchingEngine.UnmatchedOrders);
         Assert.Equal(50, unmatchedOrder.Quantity);
         Assert.Equal(20, unmatchedOrder.Price);
         Assert.NotEqual(buyOrder.Id, unmatchedOrder.Id);
@@ -66,7 +69,7 @@ public class UnitTest
     public void T04PrioridadePreco()
     {
         // Arrange
-        MatchingEngine matchingEngine = new MatchingEngine();
+        IMatchingEngine matchingEngine = CreateEngine();
         Order sellOrderA = Order.SellOrder(1, 20.50M);
         Order sellOrderB = Order.SellOrder(1, 20.00M);
         matchingEngine.ProcessOrder(sellOrderA);
@@ -86,7 +89,7 @@ public class UnitTest
     public void T05PrioridadeTempo()
     {
         // Arrange
-        MatchingEngine matchingEngine = new MatchingEngine();
+        IMatchingEngine matchingEngine = CreateEngine();
         Order sellOrderA = Order.SellOrder(5, 20.00M, 1000);
         Order sellOrderB = Order.SellOrder(5, 20.00M, 1001);
         matchingEngine.ProcessOrder(sellOrderA);
@@ -95,7 +98,6 @@ public class UnitTest
         // Act
         Order buyOrder = Order.BuyOrder(5, 20.00M);
         List<Trade> trades = matchingEngine.ProcessOrder(buyOrder);
-        ReadOnlyCollection<Order> book = matchingEngine.Book;
 
         // Assert
         var trade = Assert.Single(trades);

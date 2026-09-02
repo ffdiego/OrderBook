@@ -11,7 +11,7 @@ public class ChaosTests
     [Fact]
     public void DeveProcessarOrdensEmParaleloSemCorromperSaldo()
     {
-        IMatchingEngine engine = new MatchingEngine(); // Sua implementação
+        IMatchingEngine engine = new MatchingEngineSync(); // Sua implementação
         ExchangeGateway gateway = new ExchangeGateway(engine);
 
         // Simula 10.000 ordens sendo enviadas no mesmo milissegundo

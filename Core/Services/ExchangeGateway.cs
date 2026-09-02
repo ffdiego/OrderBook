@@ -24,5 +24,5 @@ public class ExchangeGateway
         return _engine.ProcessOrder(order);
     }
 
-    public static ExchangeGateway DefaultExchangeGateWay() => new(new MatchingEngine());
+    public static ExchangeGateway DefaultExchangeGateWay() => new(new MatchingEngineSync());
 }

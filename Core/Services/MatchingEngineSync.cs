@@ -1,17 +1,15 @@
-﻿
-using Application.Interfaces;
+﻿using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
-using System.Collections.ObjectModel;
 
 namespace Application.Services;
 
-public class MatchingEngine : IMatchingEngine
+public class MatchingEngineSync : IMatchingEngine
 {
     private readonly List<Order> unmatchedOrders;
-    public MatchingEngine()
+    public MatchingEngineSync()
     {
-        unmatchedOrders = new List<Order>();
+        unmatchedOrders = [];
     }
 
     public List<Trade> ProcessOrder(Order newOrder)
@@ -69,5 +67,5 @@ public class MatchingEngine : IMatchingEngine
             ? nova.Price <= existente.Price
             : nova.Price >= existente.Price;
 
-    public ReadOnlyCollection<Order> Book => unmatchedOrders.AsReadOnly();
+    public IEnumerable<Order> UnmatchedOrders => unmatchedOrders.AsReadOnly();
 }
