@@ -36,9 +36,11 @@ public class MatchingEngineSync : IMatchingEngine
                 .OrderBy(o => o.Price)
                 .ThenBy(o => o.Timestamp);
 
+        orders[newOrder.Side].Add(newOrder);
+
         foreach (Order matchingOrder in matchingOrders) 
         {
-            Trade trade = MatchOrders(newOrder, matchingOrder);
+            Trade trade = MakeTrade(newOrder, matchingOrder);
             trades.Add(trade);
 
             if (newOrder.Quantity <= 0)
@@ -46,12 +48,7 @@ public class MatchingEngineSync : IMatchingEngine
                 break;
             }
 
-            newOrder = new Order(newOrder);
-        }
-
-        if (newOrder.Quantity > 0)
-        {
-            orders[newOrder.Side].Add(newOrder);
+            newOrder.Id = Guid.NewGuid();
         }
 
         return trades;
@@ -76,14 +73,15 @@ public class MatchingEngineSync : IMatchingEngine
     private void SubtractQuantity(Order order, int quantity)
     {
         order.Quantity -= quantity;
+        amountNegotiated[order.Side] += quantity;
+
         if (order.Quantity <= 0)
         {
             orders[order.Side].Remove(order);
-            amountNegotiated[order.Side] += quantity;
         }
     }
 
-    private Trade MatchOrders(Order newOrder, Order matchingOrder)
+    private Trade MakeTrade(Order newOrder, Order matchingOrder)
     {
         int quantityUsed = Math.Min(newOrder.Quantity, matchingOrder.Quantity);
         SubtractQuantity(matchingOrder, quantityUsed);
@@ -108,5 +106,5 @@ public class MatchingEngineSync : IMatchingEngine
             ? nova.Price >= existente.Price
             : nova.Price <= existente.Price;
 
-    public IEnumerable<Order> UnmatchedOrders => orders[Side.Buy].Concat(orders[Side.Sell]);
+    public IEnumerable<Order> UnmatchedOrders => orders[Side.Buy].Concat(orders[Side.Sell]).Where(o => o.Quantity > 0);
 }

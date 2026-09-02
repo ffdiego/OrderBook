@@ -37,7 +37,7 @@ public abstract class MatchingEngineTestBase
         List<Trade> trades = matchingEngine.ProcessOrder(buyOrder);
 
         // Assert
-        var trade = Assert.Single(trades);
+        Trade trade = Assert.Single(trades);
         Assert.Equal(100, trade.Quantity);
         Assert.Equal(20, trade.Price);
     }
@@ -55,14 +55,14 @@ public abstract class MatchingEngineTestBase
         List<Trade> trades = matchingEngine.ProcessOrder(buyOrder);
 
         // Assert
-        var trade = Assert.Single(trades);
+        Trade trade = Assert.Single(trades);
         Assert.Equal(100, trade.Quantity);
         Assert.Equal(20, trades[0].Price);
 
         var unmatchedOrder = Assert.Single(matchingEngine.UnmatchedOrders);
         Assert.Equal(50, unmatchedOrder.Quantity);
         Assert.Equal(20, unmatchedOrder.Price);
-        Assert.NotEqual(buyOrder.Id, unmatchedOrder.Id);
+        Assert.NotEqual(trade.TakerOrderId, unmatchedOrder.Id);
     }
 
     [Fact]
