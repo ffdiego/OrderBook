@@ -1,6 +1,6 @@
 ﻿using Domain.Entities;
 
-namespace Application.Interfaces
+namespace Core.MatchingEngine
 {
     public interface IMatchingEngine
     {

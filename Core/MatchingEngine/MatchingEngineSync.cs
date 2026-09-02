@@ -1,9 +1,8 @@
-﻿using Application.Interfaces;
-using Domain.Entities;
+﻿using Domain.Entities;
 using Domain.Enums;
 using System.Diagnostics;
 
-namespace Application.Services;
+namespace Core.MatchingEngine;
 
 public class MatchingEngineSync : IMatchingEngine
 {

@@ -16,16 +16,6 @@ public class Order
 
     }
 
-    public Order(Order order)
-    {
-        this.Id = Guid.NewGuid();
-
-        this.Timestamp = order.Timestamp;
-        this.Side = order.Side;
-        this.Price = order.Price;
-        this.Quantity = order.Quantity;
-    }
-
     public Order(Side side, int quantity, decimal price, long? ticks = null)
     {
         this.Id = Guid.NewGuid();
