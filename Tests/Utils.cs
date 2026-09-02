@@ -17,7 +17,7 @@ internal static class Utils
             .Range(1, 10_000)
             .Select(_ => new Order()
             {
-                Id = new Guid(),
+                Id = Guid.NewGuid(),
                 Price = RandomNumberGenerator.GetInt32(1, 11),
                 Quantity = RandomNumberGenerator.GetInt32(1, 11),
                 Side = (Side)RandomNumberGenerator.GetInt32(0, 2),
