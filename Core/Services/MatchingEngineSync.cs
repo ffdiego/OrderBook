@@ -23,7 +23,7 @@ public class MatchingEngineSync : IMatchingEngine
         }
 
         IEnumerable<Order> matchingOrders = unmatchedOrders
-                .Where(existingOrder => PriceCheck(newOrder, existingOrder))
+                .Where(existingOrder => existingOrder.Side != newOrder.Side && PriceCheck(newOrder, existingOrder))
                 .OrderBy(o => o.Price)
                 .ThenBy(o => o.Timestamp);
 
@@ -52,6 +52,8 @@ public class MatchingEngineSync : IMatchingEngine
             {
                 break;
             }
+
+            newOrder = new Order(newOrder);
         }
 
         if (newOrder.Quantity > 0)
@@ -64,8 +66,8 @@ public class MatchingEngineSync : IMatchingEngine
 
     private static bool PriceCheck(Order nova, Order existente) =>
         nova.Side == Side.Buy
-            ? nova.Price <= existente.Price
-            : nova.Price >= existente.Price;
+            ? nova.Price >= existente.Price
+            : nova.Price <= existente.Price;
 
     public IEnumerable<Order> UnmatchedOrders => unmatchedOrders.AsReadOnly();
 }

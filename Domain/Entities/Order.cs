@@ -1,4 +1,5 @@
 ﻿using Domain.Enums;
+using System.Drawing;
 
 namespace Domain.Entities;
 
@@ -10,9 +11,19 @@ public class Order
     public int Quantity { get; set; }
     public long Timestamp { get; set; }
 
-    public Order ()
+    public Order()
     {
 
+    }
+
+    public Order(Order order)
+    {
+        this.Id = Guid.NewGuid();
+
+        this.Timestamp = order.Timestamp;
+        this.Side = order.Side;
+        this.Price = order.Price;
+        this.Quantity = order.Quantity;
     }
 
     public Order(Side side, int quantity, decimal price, long? ticks = null)
