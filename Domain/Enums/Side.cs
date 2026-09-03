@@ -7,13 +7,10 @@ public enum Side {
 
 public static class SideExtensions
 {
-    extension(Side side)
+    public static Side Opposite(this Side side) => side switch
     {
-        public Side Opposite => side switch
-        {
-            Side.Buy => Side.Sell,
-            Side.Sell => Side.Buy,
-            _ => throw new ArgumentOutOfRangeException(nameof(side), side, null)
-        };
-    }
+        Side.Buy => Side.Sell,
+        Side.Sell => Side.Buy,
+        _ => throw new ArgumentOutOfRangeException(nameof(side), side, null)
+    };
 }

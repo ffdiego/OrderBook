@@ -1,6 +1,8 @@
 ﻿using ChaosTest;
 using Core.ExchangeGateway;
 using Domain.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks; 
 using Xunit;
 
 namespace Tests.ChaosTest;
@@ -10,15 +12,15 @@ public abstract class ChaosTestBase
     protected abstract ExchangeGateway CreateService();
 
     [Fact]
-    public void DeveProcessarOrdensEmParaleloSemCorromperSaldo()
+    public async Task DeveProcessarOrdensEmParaleloSemCorromperSaldo() 
     {
         ExchangeGateway gateway = CreateService();
 
         IEnumerable<Order> orders = Utils.Gerar10MilOrdensAleatorias();
 
-        Parallel.ForEach(orders, order =>
+        await Parallel.ForEachAsync(orders, async (order, cancellationToken) =>
         {
-            gateway.ReceiveOrderAsync(order).Wait();
+            await gateway.ReceiveOrderAsync(order);
         });
 
         Assert.True(gateway.ValidarIntegridadeDoBook());
