@@ -3,7 +3,7 @@ using Core.MatchingEngine;
 
 namespace Tests.ChaosTest;
 
-public class ChaosTestSemaphore : ChaosTestBase
+public class ChaosTestSyncSemaphore : ChaosTestBase
 {
     protected override ExchangeGateway CreateService()
     {
