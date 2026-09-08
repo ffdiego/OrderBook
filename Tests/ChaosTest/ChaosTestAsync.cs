@@ -3,8 +3,8 @@ using Core.MatchingEngine;
 
 namespace Tests.ChaosTest
 {
-    public class ChaosTestAsync : ChaosTestBase
+    public class ChaosTestAsyncWithSemaphore : ChaosTestBase
     {
-        protected override ExchangeGateway CreateService() => new ExchangeGatewayAsync(new MatchingEngineAsync());
+        protected override ExchangeGateway CreateService() => new ExchangeGatewayAsync(new MatchingEngineAsyncWithSemaphore());
     }
 }
