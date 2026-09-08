@@ -1,6 +1,5 @@
 ﻿using Core.MatchingEngine;
 using Domain.Entities;
-using System.Threading.Tasks;
 
 namespace Core.ExchangeGateway
 {
@@ -10,7 +9,7 @@ namespace Core.ExchangeGateway
 
         public ExchangeGatewaySemaphore(IMatchingEngine engine) : base(engine)
         {
-            _asyncSemaphore = new SemaphoreSlim(2,2);
+            _asyncSemaphore = new SemaphoreSlim(1,1);
         }
 
         public override async Task<List<Trade>> ReceiveOrderAsync(Order order)
