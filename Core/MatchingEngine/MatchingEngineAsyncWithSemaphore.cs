@@ -214,8 +214,7 @@ namespace Core.MatchingEngine
                         return askHeap.UnorderedItems
                             .Concat(bidHeap.UnorderedItems)
                             .Select(entry => entry.Element)
-                            .Where(order => order.Quantity > 0)
-                            .ToList();
+                            .Where(order => order.Quantity > 0);
                     }
                     finally
                     {
