@@ -1,157 +1,71 @@
-# Desafio Técnico: Matching Engine (Order Book)
+## Introdução
 
-## Contexto e Objetivos
-No mercado financeiro, a latência e a precisão são inegociáveis. Milissegundos perdidos por escolhas ruins de algoritmos ou problemas de concorrência podem resultar em perdas financeiras milionárias. 
+Para fins comparativos, fizemos 2 soluções: Uma síncrona e outra assíncrona, e ao longo da apresentação haverão comparativos entre ambas, que servirão como apoio para a nossa conclusão final.
+## Premissas
 
-O objetivo deste laboratório é construir o núcleo de um **Matching Engine** (Motor de Cruzamento de Ordens), focando na aplicação prática de **Estruturas de Dados** (Big-O) e no manuseio de **Concorrência** e **Alta Performance**.
+Para iniciar o desenho da arquitetura e o desenvolvimento do código, partimos de 4 premissas que guiaram nossas ideias:
+- O melhor cenário é ter 2 estruturas de dados (uma pra *bid* e outra pra *ask*);
+- Pegar a ordem oposta para tentar o *match* pode ser paralelo, pois ele só pega a o contrário da ordem recebida;
+- Checar o preço no *Order Book* precisa ser atômico, pois é necessário acessar a estrutura de dados para consulta do *book* (se paralelizado, pode gerar *deadklocks*).
+- O fazer a *trade* precisa ser atômico, pois precisamos considerar o *match* parcial, que torna necessário o acesso ao *Order Book*. 
+## Arquitetura
 
-⚠️ **PROIBIDO O USO DE IA (ChatGPT, Copilot, Gemini, etc.)**
-> Este é um exercício de raciocínio lógico e engenharia de base. O uso de IA para gerar o código anula o propósito do treinamento. Consultas a documentações oficiais e livros são permitidas.
+Dada essa premissa, propomos a seguinte arquitetura: Duas *heaps* (`AskHeap` e `BidHeap`), desenvolvidas usando *PriorityQueue* ordenadas por um `Record`  contendo: preço, *timestamp* e *sequence*. Para o acesso às *heaps*, utilizamos 2 semáforos (um para cada *heap*), pois uma ordem que precisa acessar uma das *heaps* só precisa acessar a outra em caso de não dar match ou match parcial. Dividimos em 2 fases de execução:
+- **Fase 1:** Trata uma ordem completa, sem considerar restos (ou seja, matchings parciais precisam da fase 2). Dessa forma, basta olhar para a *heap* oposta, não é preciso inserir na própria *heap*, otimizando custos. 
+- **Fase 2:** Trata a *order* e seus restos. Essa efetivamente olha pra *heap* oposta, pega o resto da *order* e salva na *heap* própria. Ou seja, somente aqui há escrita no *Order Book*. 
+Como critério de desempate ao timestamp, criamos um `Sequence`, que serve como um contador único da *engine*, incrementando toda vez que uma ordem chega ao *book*. Ele serve como um 3° critério de prioridade e, sem ele, a *heap* desempate de forma arbitrária.
 
----
 
-## Escopo e Regras de Negócio (V1)
+Portanto, dado essas características, foi desenhada a seguinte arquitetura:
 
-Para manter o foco na lógica central, o escopo inicial tem restrições estritas:
+![[Pasted image 20260910100448.png]]
 
-| Requisito | Definição |
-| :--- | :--- |
-| **Ativo** | Fixo. O motor processará ordens de um único ativo (ex: `PETR4`). |
-| **Tipos de Ordem** | Apenas *Limit Orders* (Ordens com preço limite estipulado). |
-| **Operações** | Apenas Inserção (Compra ou Venda). Cancelamento e alteração estão fora do escopo. |
-| **Regra de Matching** | **Price-Time Priority**. O melhor preço sempre tem prioridade. Em caso de empate no preço, a ordem que chegou primeiro é executada. |
-| **Persistência** | O processamento deve ocorrer 100% em memória. Não haverá banco de dados. |
+## Complexidade Algorítmica
 
----
+Em ambas as soluções,  podemos avaliar a complexidade algorítmica em 3 momentos. Na solução síncrona:
 
-## Modelos de Domínio (Ponto de Partida)
+| Intenção | Operação                                                                          | Custo        |
+| -------- | --------------------------------------------------------------------------------- | ------------ |
+| Busca    | `.Where() `percorre a lista inteira,<br>`.OrderBy().ThenBy()` ordena              | `O(n log n)` |
+| Inserção | `List.Add` no fim do array                                                        | `O(1)`       |
+| Remoção  | `List.Remove` faz busca linear (`IndexOf`) +<br>`Array.Copy` para fechar o buraco | `O(n)`       |
+Já na solução assíncrona:
 
-Vocês devem utilizar os modelos abaixo como base para a implementação. Observem o uso de identificadores universais (`UUID/Guid`).
+| Intenção                  | Operação              | Custo      |
+| ------------------------- | --------------------- | ---------- |
+| Buscar o melhor elemento  | `TryPeek`             | `O(1)`     |
+| Inserção/Remoção na pilha | `Dequeue` / `Enqueue` | `O(log n)` |
+A grande otimização esta na busca pelo melhor elemento, sendo uma busca de tempo constante. Uma vez que, em uma *heap* ordenada por prioridade, se o topo não dá match, ninguém dá.
 
-```csharp
-public enum Side { Buy, Sell }
+## Gerenciamento de Estado
 
-public class Order 
-{
-    public Guid Id { get; set; }
-    public Side Side { get; set; }
-    public decimal Price { get; set; }
-    public int Quantity { get; set; }
-    public long Timestamp { get; set; } 
-}
+Cada *order* que vai ser inserida no *book* recebe um novo Id (a menos que a quantidade não tenha sido alterada), a *order* inicial nunca é reutilizada.  O `Priority` é um `record`, ou seja, imutável, copiado por valor. Por isso o *maker* parcialmente executado volta pra *heap* com a prioridade original e mantém o lugar exato na fila, em vez de "chegar de novo" atrás de quem veio depois.
 
-public class Trade 
-{
-    public Guid Id { get; set; }
-    public Guid MakerOrderId { get; set; }
-    public Guid TakerOrderId { get; set; }
-    public decimal Price { get; set; }
-    public int Quantity { get; set; }
-}
+## Paralelismo
 
-public interface IMatchingEngine 
-{
-    // Processa a ordem e retorna os trades gerados (se houver cruzamento)
-    List<Trade> ProcessOrder(Order order); 
-}
+Tivemos 2 momentos onde foram necessários operações atômicas:
+- Acesso as *heaps*: Para não gerar concorrência entre *orders* o acesso a ambas as *heaps* precisa ser síncrono. Tanto na fase 1 que não considera restos (*lockando* apenas uma *heap*), quanto na fase 2 (*lockando* ambas as *heaps* para salvamento no *book*)
+- Acesso ao *book*: Quando efetivamente vamos adicionar a trade feita na lista de trades e as *orders* nas respectivas listas de *orders*  processadas, precisamos fazer isso de forma atômica, utilizando *lock*, para não haver sobreposição de escritas. 
 
-```
+## Escalabilidade
 
----
+Considerando apenas 1 *book*, há uma grande limitação em relação a melhorias propostas nessa solução, pois como vimos, poucas coisas são, de fato, paralelizáveis. Porém a implementação feita permite uma otimização do tempo considerando a arquitetura proposta, e dessa forma ao escalonar o único fator possível, que seria o número de orders simultâneas, o sistema continuaria com o mesmo comportamento, processando 2 *threads* simultaneamente na fase 1 (uma para *ask* e outra para *bid*). Já considerando o contexto de N *books*, é possível fazer um paralelismo com maior granularidade. Uma vez que cada *book* pode ser paralelo, e internamente com nossa implementação, também serem paralelos. 
 
-## Concorrência (A Porta de Entrada)
+## Performance e Resultados
 
-Seu motor não rodará em um ambiente isolado. Ele receberá um bombardeio de ordens simultâneas. Para simular isso, sua implementação deve ser acoplada à camada de `ExchangeGateway`:
+Os testes mostraram que a implementação assíncrona que propomos superou a síncrona, provando que, para essa forma de implementação do *Order Book* é possível otimizar a solução quando usada essa estrutura de dados e essa forma de paralelizar o sistema. Abaixo segue o resultado comparativo dos testes:
 
-```csharp
-public class ExchangeGateway 
-{
-    private readonly IMatchingEngine _engine;
+Para executar os testes utilizando o Benchmark (que suprime o JIT e outras execuções do Visual Studio), basta rodar no terminal (na pasta Benchmark):
+`$: dotnet run -c Release`
 
-    public ExchangeGateway(IMatchingEngine engine) 
-    {
-        _engine = engine;
-    }
+| Teste                         | Duração |
+| ----------------------------- | ------- |
+| *ChaosTestAsyncWithSemaphore* | ~101 ms |
+| *ChaosTestSyncLock*           | ~211 ms |
+| *ChaosTestSyncSemaphore*      | ~167 ms |
+| *MatchingEngineAsyncTest*     | ~51 ms  |
+| *MatchingEngineSyncTest*      | ~50 ms  |
 
-    // ATENÇÃO: Este método será chamado por múltiplas threads simultaneamente.
-    // Como vocês vão garantir que o motor cruze as ordens sem corromper o estado em memória?
-    public async Task<List<Trade>> ReceiveOrderAsync(Order order) 
-    {
-        // TODO: Implementar a chamada segura para _engine.ProcessOrder(order)
-        throw new NotImplementedException();
-    }
-}
+## Conclusão
 
-```
-
-### Teste de Estresse (Chaos Test)
-
-Sua solução final **deve** passar no teste de estresse abaixo sem corromper as quantidades de lotes negociados e sem gerar *Deadlocks*:
-
-```csharp
-[Fact]
-public void DeveProcessarOrdensEmParaleloSemCorromperSaldo() 
-{
-    var engine = new MatchingEngine(); // Sua implementação
-    var gateway = new ExchangeGateway(engine);
-    
-    // Simula 10.000 ordens sendo enviadas no mesmo milissegundo
-    var orders = Gerar10MilOrdensAleatorias(); 
-
-    Parallel.ForEach(orders, order => 
-    {
-        gateway.ReceiveOrderAsync(order).Wait();
-    });
-
-    // O total de lotes comprados TEM QUE SER IGUAL ao total de lotes vendidos.
-    Assert.True(engine.ValidarIntegridadeDoBook()); 
-}
-
-```
-
----
-
-## Roteiro de Testes Unitários (TDD)
-
-Sua equipe deve implementar a lógica gradativamente, garantindo que os testes abaixo passem um a um, nesta exata ordem:
-
-### Teste 1: Acomodação no Book
-
-* **Ação:** Enviar `Ordem de Compra` (Bid) de 100 lotes a R$ 20,00.
-* **Resultado Esperado:** Retorna lista de *Trades* vazia. A ordem repousa no *book*.
-
-### Teste 2: O Match Perfeito (Execução Total)
-
-* **Estado:** *Book* possui uma `Venda` de 100 lotes a R$ 20,00.
-* **Ação:** Enviar `Ordem de Compra` de 100 lotes a R$ 20,00.
-* **Resultado Esperado:** 1 *Trade* gerado de 100 lotes a R$ 20,00. O *book* deve ficar completamente vazio.
-
-### Teste 3: Execução Parcial (Sobrando saldo no Taker)
-
-* **Estado:** *Book* possui uma `Venda` de 100 lotes a R$ 20,00.
-* **Ação:** Enviar `Ordem de Compra` de **150** lotes a R$ 20,00.
-* **Resultado Esperado:** 1 *Trade* de 100 lotes é gerado. Uma nova `Ordem de Compra` com os **50** lotes restantes deve repousar no *book* a R$ 20,00.
-
-### Teste 4: Prioridade de Preço (O melhor preço vence)
-
-* **Estado:** *Book* possui duas ordens de Venda: Ordem A (R$ 20,50) e Ordem B (**R$ 20,00**).
-* **Ação:** Enviar `Ordem de Compra` a R$ 21,00.
-* **Resultado Esperado:** O *trade* ocorre obrigatoriamente cruzando com a **Ordem B** (R$ 20,00), garantindo o melhor preço para quem comprou.
-
-### Teste 5: Prioridade de Tempo (FIFO)
-
-* **Estado:** *Book* possui duas ordens de Venda no mesmo preço: Ordem A (R$ 20,00, Timestamp: 1000) e Ordem B (R$ 20,00, Timestamp: 1001).
-* **Ação:** Enviar `Ordem de Compra` parcial que consuma apenas uma delas.
-* **Resultado Esperado:** O *trade* deve consumir primeiro a **Ordem A** (menor Timestamp).
-
----
-
-## Critérios de Avaliação
-
-Ao final da dinâmica, as soluções serão avaliadas sob três pilares:
-
-1. **Complexidade Computacional (Big-O):** Suas buscas por preços e inserções dependem de varrer arrays inteiros `O(n)` ou utilizam estruturas otimizadas `O(log n)` / `O(1)`?
-2. **Gerenciamento de Estado:** Vocês mutaram (alteraram) a ordem original ou geraram novas ordens para lidar com execuções parciais de forma segura?
-3. **Gestão de Concorrência:** O sistema sobreviveu ao *Chaos Test*? A abordagem de *locking* (se utilizada) estrangulou a performance do motor?
-
-Boa sorte e bom código!
+Ao estudar diversas formas de desenhar a arquitetura dessa solução, percebemos que, para o desafio proposto, não existia solução perfeita. Qualquer solução tem seu ganho e sua perda, que devem ser considerados e colocados na balança para definir qual é a melhor abordagem do problema. Até mesmo soluções síncronas podem ser mais viáveis que soluções assíncronas, a depender da forma que for implementado. Em suma, esse exercício é importante para refletir sobre qual a melhor forma possível de pensar e desenvolver uma solução, apenas consultando documentações e colegas, sem uso assistido de IA. 
