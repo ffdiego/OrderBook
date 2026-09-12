@@ -18,7 +18,7 @@ Como critério de desempate ao timestamp, criamos um `Sequence`, que serve como 
 
 Portanto, dado essas características, foi desenhada a seguinte arquitetura:
 
-![[image.png]]
+![Arquitetura do Order Book](Images/architecture.svg)
 
 ## Complexidade Algorítmica
 
