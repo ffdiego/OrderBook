@@ -18,7 +18,7 @@ Como critério de desempate ao timestamp, criamos um `Sequence`, que serve como 
 
 Portanto, dado essas características, foi desenhada a seguinte arquitetura:
 
-![[Pasted image 20260910100448.png]]
+![[image.png]]
 
 ## Complexidade Algorítmica
 
@@ -29,12 +29,14 @@ Em ambas as soluções,  podemos avaliar a complexidade algorítmica em 3 moment
 | Busca    | `.Where() `percorre a lista inteira,<br>`.OrderBy().ThenBy()` ordena              | `O(n log n)` |
 | Inserção | `List.Add` no fim do array                                                        | `O(1)`       |
 | Remoção  | `List.Remove` faz busca linear (`IndexOf`) +<br>`Array.Copy` para fechar o buraco | `O(n)`       |
+
 Já na solução assíncrona:
 
 | Intenção                  | Operação              | Custo      |
 | ------------------------- | --------------------- | ---------- |
 | Buscar o melhor elemento  | `TryPeek`             | `O(1)`     |
 | Inserção/Remoção na pilha | `Dequeue` / `Enqueue` | `O(log n)` |
+
 A grande otimização esta na busca pelo melhor elemento, sendo uma busca de tempo constante. Uma vez que, em uma *heap* ordenada por prioridade, se o topo não dá match, ninguém dá.
 
 ## Gerenciamento de Estado
@@ -60,11 +62,10 @@ Para executar os testes utilizando o Benchmark (que suprime o JIT e outras execu
 
 | Teste                         | Duração |
 | ----------------------------- | ------- |
-| *ChaosTestAsyncWithSemaphore* | ~101 ms |
-| *ChaosTestSyncLock*           | ~211 ms |
-| *ChaosTestSyncSemaphore*      | ~167 ms |
-| *MatchingEngineAsyncTest*     | ~51 ms  |
-| *MatchingEngineSyncTest*      | ~50 ms  |
+| *ChaosTestAsync_2*            | ~20.19 ms  |
+| *ChaosTestAsync*              | ~22.83 ms  |
+| *ChaosTestSyncLock*           | ~27.62 ms  |
+| *ChaosTestSyncSemaphore*      | ~43.06 ms |
 
 ## Conclusão
 
