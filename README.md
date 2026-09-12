@@ -67,6 +67,7 @@ Para executar os testes utilizando o Benchmark (que suprime o JIT e outras execu
 | *ChaosTestSyncLock*           | ~27.62 ms  |
 | *ChaosTestSyncSemaphore*      | ~43.06 ms |
 
+Obs: A versão 2 de async que foi criada (*ChaosTestAsync_2*) é inspirada na primeira, porém sem a fase 1: Ou seja, ele não tenta lockar apenas a oposta, ele já locka direto ambas e insere (acaba virando completamente síncrono essa parte). Essa nova engine aumentou o desempenho e só prova que, para esse desafio, quanto mais síncrono melhor. Entretanto como é apenas uma variante da versão oficial, não foi tão abordada aqui, servindo apenas para fins comparativos. 
 ## Conclusão
 
 Ao estudar diversas formas de desenhar a arquitetura dessa solução, percebemos que, para o desafio proposto, não existia solução perfeita. Qualquer solução tem seu ganho e sua perda, que devem ser considerados e colocados na balança para definir qual é a melhor abordagem do problema. Até mesmo soluções síncronas podem ser mais viáveis que soluções assíncronas, a depender da forma que for implementado. Em suma, esse exercício é importante para refletir sobre qual a melhor forma possível de pensar e desenvolver uma solução, apenas consultando documentações e colegas, sem uso assistido de IA. 
