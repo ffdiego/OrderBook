@@ -3,11 +3,11 @@ using Core.MatchingEngine;
 
 namespace Tests.ChaosTest;
 
-public class ChaosTestSyncLock : ChaosTestBase
+public class ChaosTestSyncSemaphore : ChaosTestBase
 {
     protected override ExchangeGatewayBase CreateService()
     {
         IMatchingEngine engine = new MatchingEngineSync();
-        return new ExchangeGatewaySyncLock(engine);
+        return new ExchangeGatewaySyncSemaphore(engine);
     }
 }

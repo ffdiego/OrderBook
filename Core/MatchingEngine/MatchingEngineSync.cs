@@ -1,6 +1,5 @@
 ﻿using Domain.Entities;
 using Domain.Enums;
-using System.Diagnostics;
 
 namespace Core.MatchingEngine;
 
@@ -30,7 +29,7 @@ public class MatchingEngineSync : IMatchingEngine
     {
         List<Trade> trades = [];
 
-        IEnumerable<Order> matchingOrders = orders[newOrder.Side.Opposite]
+        IEnumerable<Order> matchingOrders = orders[newOrder.Side.Opposite()]
                 .Where(existingOrder => PriceCheck(newOrder, existingOrder))
                 .OrderBy(o => o.Price)
                 .ThenBy(o => o.Timestamp);
