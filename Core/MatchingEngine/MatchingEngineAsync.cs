@@ -3,7 +3,7 @@ using Domain.Enums;
 
 namespace Core.MatchingEngine
 {
-    public class MatchingEngineAsyncWithSemaphore : IMatchingEngineAsync
+    public class MatchingEngineAsync : IMatchingEngineAsync
     {
         private readonly record struct Priority(decimal Price, long Timestamp, long Sequence);
 
@@ -40,7 +40,7 @@ namespace Core.MatchingEngine
         private readonly Dictionary<Side, int> amountNegotiated;
         private long sequence;
 
-        public MatchingEngineAsyncWithSemaphore()
+        public MatchingEngineAsync()
         {
             askHeap = new PriorityQueue<Order, Priority>(AskComparer);
             bidHeap = new PriorityQueue<Order, Priority>(BidComparer);

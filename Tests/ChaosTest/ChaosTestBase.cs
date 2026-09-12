@@ -9,12 +9,12 @@ namespace Tests.ChaosTest;
 
 public abstract class ChaosTestBase
 {
-    protected abstract ExchangeGateway CreateService();
+    protected abstract ExchangeGatewayBase CreateService();
 
     [Fact]
     public async Task DeveProcessarOrdensEmParaleloSemCorromperSaldo() 
     {
-        ExchangeGateway gateway = CreateService();
+        ExchangeGatewayBase gateway = CreateService();
 
         IEnumerable<Order> orders = Utils.Gerar10MilOrdensAleatorias();
 

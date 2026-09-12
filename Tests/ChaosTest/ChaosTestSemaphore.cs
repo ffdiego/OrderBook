@@ -5,9 +5,9 @@ namespace Tests.ChaosTest;
 
 public class ChaosTestSyncSemaphore : ChaosTestBase
 {
-    protected override ExchangeGateway CreateService()
+    protected override ExchangeGatewayBase CreateService()
     {
         IMatchingEngine engine = new MatchingEngineSync();
-        return new ExchangeGatewaySemaphore(engine);
+        return new ExchangeGatewaySyncSemaphore(engine);
     }
 }

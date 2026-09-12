@@ -4,7 +4,7 @@ using Domain.Entities;
 
 namespace Core.ExchangeGateway
 {
-    public class ExchangeGatewayAsync : ExchangeGateway
+    public class ExchangeGatewayAsync : ExchangeGatewayBase
     {
         private readonly IMatchingEngineAsync _asyncEngine;
 

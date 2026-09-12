@@ -4,6 +4,6 @@ namespace Tests.MatchingEngineTest
 {
     public class MatchingEngineAsyncTest : MatchingEngineTestBase
     {
-        protected override IMatchingEngine CreateEngine() => new MatchingEngineAsyncWithSemaphore();
+        protected override IMatchingEngine CreateEngine() => new MatchingEngineAsync();
     }
 }

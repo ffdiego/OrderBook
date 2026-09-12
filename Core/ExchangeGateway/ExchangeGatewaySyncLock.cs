@@ -3,11 +3,11 @@ using Domain.Entities;
 
 namespace Core.ExchangeGateway;
 
-public class ExchangeGatewayLock : ExchangeGateway
+public class ExchangeGatewaySyncLock : ExchangeGatewayBase
 {
     private Lock _lock;
 
-    public ExchangeGatewayLock(IMatchingEngine engine) : base(engine)
+    public ExchangeGatewaySyncLock(IMatchingEngine engine) : base(engine)
     {
         _lock = new Lock();
     }

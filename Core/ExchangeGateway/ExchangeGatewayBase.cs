@@ -3,11 +3,11 @@ using Domain.Entities;
 
 namespace Core.ExchangeGateway;
 
-public abstract class ExchangeGateway
+public abstract class ExchangeGatewayBase
 {
     protected readonly IMatchingEngine _engine;
 
-    public ExchangeGateway(IMatchingEngine engine)
+    public ExchangeGatewayBase(IMatchingEngine engine)
     {
         _engine = engine;
     }

@@ -3,11 +3,11 @@ using Domain.Entities;
 
 namespace Core.ExchangeGateway
 {
-    public class ExchangeGatewaySemaphore: ExchangeGateway
+    public class ExchangeGatewaySyncSemaphore: ExchangeGatewayBase
     {
         private readonly SemaphoreSlim _asyncSemaphore;
 
-        public ExchangeGatewaySemaphore(IMatchingEngine engine) : base(engine)
+        public ExchangeGatewaySyncSemaphore(IMatchingEngine engine) : base(engine)
         {
             _asyncSemaphore = new SemaphoreSlim(1,1);
         }
